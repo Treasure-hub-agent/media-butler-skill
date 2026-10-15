@@ -1,2 +1,45 @@
+# Python 运行产物
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+
+# 构建/打包产物
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# 运行状态（默认在用户家目录，这里兜住 MEDIA_BUTLER_HOME 指向仓库内的情况）
+.media-butler/
+media-butler-state/
+*.aria2
+*.torrent
+
+# 测试与覆盖率产物
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.pytest_cache/
+.tox/
+.nox/
+
+# 虚拟环境
+.venv/
+venv/
+env/
+
+# 编辑器与 IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# 系统文件
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+desktop.ini
