@@ -30,3 +30,42 @@ class TestParse(unittest.TestCase):
 
     def test_subtitle_group_implies_chinese(self):
         self.assertTrue(parser.has_chinese_subtitle("[某字幕组] Some Anime - 03 [1080p]"))
+
+
+class TestBracketPrefix(unittest.TestCase):
+    """字幕组用方括号前缀是动漫资源最常见的命名，标题不能被截成空串。"""
+
+    def test_bracket_prefix_keeps_title(self):
+        r = parser.parse("[某字幕组] 某某番 - 03 [1080P][简繁内封].mkv")
+        self.assertNotEqual(r["title"], "")
+        self.assertIn("某某番", r["title"])
+
+    def test_bracket_prefix_still_finds_marks(self):
+        r = parser.parse("[某字幕组] 某某番 - 03 [1080P][简繁内封].mkv")
+        self.assertTrue(r["marks"])
+
+    def test_leading_bracket_group_captured(self):
+        r = parser.parse("[Group] Some Anime - 03 [1080p]")
+        self.assertIn("Some Anime", r["title"])
+
+
+class TestDigitEpisode(unittest.TestCase):
+    """' - 03 ' 这类纯数字集号在动漫/字幕组命名里极其常见。"""
+
+    def test_dash_digit_episode(self):
+        r = parser.parse("Some Anime - 03 [1080p].mkv")
+        self.assertEqual(r["episode"], 3)
+
+    def test_dash_digit_episode_multi_digit(self):
+        r = parser.parse("Some Anime - 245 [1080p].mkv")
+        self.assertEqual(r["episode"], 245)
+
+    def test_year_not_mistaken_for_episode(self):
+        # 年份不能被误判成集号
+        r = parser.parse("Some.Movie.2019.1080p.BluRay.x264-GROUP")
+        self.assertIsNone(r["episode"])
+
+    def test_batch_range_not_mistaken_for_episode(self):
+        r = parser.parse("Some Show 001-500 Complete Series [1080p]")
+        self.assertTrue(r["is_batch"])
+        self.assertIsNone(r["episode"])
