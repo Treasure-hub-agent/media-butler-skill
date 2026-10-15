@@ -17,7 +17,7 @@ _TECH_TAGS = re.compile(
     r"BluRay|Blu-ray|BDRip|BRRip|WEB-?DL|WEBRip|HDTV|DVDRip|Remux|REMASTERED|"
     r"x264|x265|H\.?264|H\.?265|HEVC|AVC|AV1|10bit|8bit|10-bit|"
     r"AAC|AC3|DTS|DDP|DD5\.1|FLAC|TrueHD|Atmos|MA|"
-    r"PROPER|REPACK|MULTi|DUAL|AUDIO)\b", re.I)
+    r"PROPER|REPACK|MULTi|DUAL|AUDIO|CR|MultiSub|Multi-Audio)\b", re.I)
 
 # 中文噪声词：不进标题的通用修饰
 _NOISE_CN = ["电影", "高清", "高清版", "完整版", "未删减", "全集", "合集",
@@ -27,7 +27,11 @@ _NOISE_CN = ["电影", "高清", "高清版", "完整版", "未删减", "全集"
 # 发布组/压制组特征（出现在头部或尾部）
 _GROUP_LIKE = re.compile(r"[-&@]|Raws|Studio|Team|Sub|Fansub|字幕组|字幕組|压制", re.I)
 
-_BATCH_WORD = re.compile(r"\b(complete|batch|series|seasons?)\b|合集|全集|全\d+[集话話]", re.I)
+# 合集词：complete/batch/series 单独出现即判合集；
+# 「season(s)」只有与 complete/全/区间/多季同现才算合集（"2nd Season" 是单集）
+_BATCH_WORD = re.compile(r"\b(complete|batch|series)\b|合集|全集|全\d+[集话話]"
+                         r"|\bcomplete\s+seasons?\b|全\s*\d+\s*季"
+                         r"|\bseasons?\s*\d+\s*[-~]\s*\d+", re.I)
 
 _EP_PATTERNS = [
     re.compile(r"[Ss](\d{1,2})[Ee](\d{1,4})"),                      # S02E07
@@ -37,8 +41,14 @@ _EP_PATTERNS = [
     re.compile(r"\[\s*(\d{1,4})\s*\]"),                             # [03]
     re.compile(r"(?:^|[\s._])-\s*(\d{1,4})(?![\dpiP])"),           # " - 03 "
 ]
-_SEASON_PATTERNS = [re.compile(r"[Ss]eason[\s._-]*(\d{1,2})", re.I)]
-_RANGE = re.compile(r"(\d{1,4})\s*[-~]\s*(\d{1,4})")
+_SEASON_WORD = re.compile(r"\b(\d{1,2})(?:st|nd|rd|th)\s+season\b", re.I)
+_ROMAN_SEASON = re.compile(r"\b(I{1,3}|IV|VI{0,3}|IX|X)\s+season\b", re.I)
+_ROMAN_VALUES = {"I": 1, "II": 2, "III": 3, "IV": 4, "V": 5, "VI": 6,
+                 "VII": 7, "VIII": 8, "IX": 9, "X": 10}
+# 「Season N」中间不夹破折号：Season - 10 的 10 是集号，不是季号
+_SEASON_PATTERNS = [re.compile(r"[Ss]eason[\s._]*(\d{1,2})", re.I)]
+# 集号区间（如 01-28）。左侧不能紧接字母，否则 "S2 - 06" 会被误判成区间
+_RANGE = re.compile(r"(?<![A-Za-z])(\d{1,4})\s*[-~]\s*(\d{1,4})")
 _BRACKET_BLOCK = re.compile(r"[\[\(【]([^\]\)】]*)[\]\)】]")
 _YEAR = re.compile(r"\b(19\d{2}|20\d{2})\b")
 
@@ -76,13 +86,26 @@ def parse(name: str) -> dict:
         break
 
     if season is None:
+        m = _SEASON_WORD.search(stem)
+        if m:
+            season = int(m.group(1))
+        else:
+            m = _ROMAN_SEASON.search(stem)
+            if m:
+                season = _ROMAN_VALUES.get(m.group(1).upper())
+
+    if season is None:
         for p in _SEASON_PATTERNS:
             m = p.search(stem)
             if m:
                 season = int(m.group(1))
                 break
 
-    ym = _YEAR.search(stem)
+    # 年份候选可能有多个（片名本身就叫「1917」「2012」）：
+    # 取最后一个——资源名的发行年份惯例排在片名之后
+    ym = None
+    for cand in _YEAR.finditer(stem):
+        ym = cand
     year = int(ym.group(1)) if ym else None
 
     is_batch = bool(_RANGE.search(stem)) or bool(_BATCH_WORD.search(stem))
@@ -133,6 +156,9 @@ def _clean_title(stem: str, year, episode) -> str:
     t = _TECH_TAGS.sub(" ", t)
     t = _RANGE.sub(" ", t)
     t = _BATCH_WORD.sub(" ", t)
+    t = _SEASON_WORD.sub(" ", t)
+    t = _ROMAN_SEASON.sub(" ", t)
+    t = re.sub(r"\bseason[\s._]*\d{1,2}\b", " ", t, flags=re.I)
     for w in _NOISE_CN:
         t = t.replace(w, " ")
     t = re.sub(r"[-@][A-Za-z0-9]{2,20}\b", " ", t)     # 尾部发布组

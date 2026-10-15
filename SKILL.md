@@ -114,7 +114,7 @@ metadata:
 | `proxy` | 空 | 用户显式配置；空 = 直连，也代表用户要求不走代理 |
 | `terms_accepted` | false | 首次使用确认标记 |
 
-常用改法：`media.py config --set library_root=/data/media --set proxy=http://127.0.0.1:7890`。
+常用改法：`media.py config --set library_root=/data/media --set proxy=http://127.0.0.1:8080`。
 代理只支持 HTTP 型；需要 SOCKS 时用系统级 TUN 模式，不要往 `proxy` 里塞 socks 地址。
 
 ## 相关资源

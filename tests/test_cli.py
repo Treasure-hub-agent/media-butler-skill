@@ -360,7 +360,8 @@ class TestIngest(CliBase):
         self.assertEqual(items[0]["path"], dest)
         self.assertEqual(items[0]["has_cn_sub"], 1)
         self.assertEqual(items[0]["media_type"], "movie")
-        md = open(data["index"]["markdown"], encoding="utf-8").read()
+        with open(data["index"]["markdown"], encoding="utf-8") as fh:
+            md = fh.read()
         self.assertIn("Some Movie", md)
 
     def test_ingest_tv_episode_is_indexed_with_season_episode(self):

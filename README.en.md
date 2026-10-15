@@ -12,7 +12,7 @@
 [![Version](https://img.shields.io/badge/version-0.1.0-orange.svg)](CHANGELOG.md)
 
 No service to deploy, no account to register, no config file required to start: parse filenames → look up public metadata → normalize naming → sort by type → maintain a local catalogue.
-Search and retrieval are provided by **pluggable adapters** — the repository bundles no site-specific adapter, and everything can be switched off for fully offline use.
+Search and retrieval are provided by **pluggable adapters** — the repository bundles no site-specific adapter, only a single **aggregator adapter** (its server-side fetches upstream public indexes on your behalf), and everything can be switched off for fully offline use.
 
 </div>
 
@@ -360,7 +360,7 @@ No, deliberately: there are no subscription features and no unattended loops.
 
 - This tool is a **CLI for managing video files**: it parses filenames, queries public metadata, normalizes naming, sorts by type, and maintains a local catalogue.
   It does **not host, index, or scrape** any video content, and the repository contains neither video content nor links to specific works.
-- Search capability is provided by **pluggable adapters**; the repository bundles no site-specific adapter and everything can be switched off for fully offline use.
+- Search capability is provided by **pluggable adapters**; the repository bundles no site-specific adapter, only one **aggregator adapter**, and everything can be switched off for fully offline use.
 - Please use it only for content you own the rights to or are licensed to access, works in the public domain, and personal backups of media you have purchased. Confirming the authorization status of what you obtain is your responsibility.
 - This project is **free, ad-free, accepts no donations, and has no paid unlocks**; the authors derive no income from it.
 - Full terms (including rights-holder and takedown response, and the kinds of contributions that are not accepted) are in **[DISCLAIMER.md](DISCLAIMER.md)**.
