@@ -30,10 +30,8 @@ VERSION = "media-butler 0.1.0"
 #: 源侧分类线索：命中即判为动漫（剧集/电影判定之外的特例）
 ANIME_HINTS = ("动漫", "动画", "番剧", "anime")
 
-#: 归档成功的 execute() 结果值（其余如 skipped-exists/error/refused 都不入索引）
-_ARCHIVED_OK = ("moved", "moved-cross-device-link", "linked",
-                "moved-cross-device-copied", "copy+copied",
-                "hardlink-unavailable-EXDEV+copied")
+#: 归档失败/未落地的结果前缀（error / skipped-exists / refused-large-copy）
+_ARCHIVE_BAD_PREFIXES = ("error", "skipped", "refused")
 
 #: 未安装 aria2c 时的建议（不报错退出，只给可执行替代路径）
 _NO_DOWNLOADER_HINTS = [
@@ -325,8 +323,15 @@ def cmd_ingest(args):
     conn = indexer.init_db(db)
     added = 0
     for entry, item in zip(log, items):
-        if entry.get("result") not in _ARCHIVED_OK:
-            continue      # 跳过/失败/拒复制都不入索引，避免索引指向不存在的文件
+        result = str(entry.get("result") or "")
+        # 只收「文件真的在目标位置上」的条目：
+        # 1) error/skipped/refused 一律排除（含 refused-large-copy 这种没落盘的）；
+        # 2) 其余结果值可能是 *+copied 组合（如 hardlink-failed-<errno>+copied），
+        #    白名单容易漏，改为实测目标文件存在——不存在就绝不写索引。
+        if result.startswith(_ARCHIVE_BAD_PREFIXES):
+            continue
+        if not os.path.exists(entry.get("dest") or ""):
+            continue
         info = item["parsed"]
         indexer.add(conn, {
             "title": info["title"], "year": info.get("year"),

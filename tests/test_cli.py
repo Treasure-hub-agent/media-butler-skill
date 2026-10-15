@@ -403,6 +403,62 @@ class TestIngest(CliBase):
         self.assertEqual(code, 0)
         self.assertEqual(jout(out)["count"], 1)
 
+    def test_failed_archive_is_not_indexed(self):
+        """跳过/失败/拒复制的条目绝不入索引（否则索引会指向不存在的文件）。"""
+        self.touch("dl", "Some.Movie.2019.mkv")
+        fake_log = [{"src": self.path("dl", "Some.Movie.2019.mkv"),
+                     "dest": self.path("lib", "电影", "Some Movie (2019)",
+                                       "Some Movie (2019).mkv"),
+                     "result": "error:disk-full"}]
+        with mock.patch.object(media.organizer, "execute", return_value=fake_log):
+            code, out = run("ingest", self.path("dl"), "--library", self.path("lib"))
+        self.assertEqual(code, 0)
+        self.assertEqual(jout(out)["moved"], 0)
+        conn = indexer.init_db(self.path("state", "library.db"))
+        self.assertEqual(indexer.list_items(conn), [])
+
+    def test_copy_fallback_variants_are_indexed(self):
+        """``*+copied`` 回退（跨设备/硬链接失败的组合值）也是归档成功，必须入索引。
+
+        结果值形如 ``hardlink-failed-18+copied``：白名单容易漏判，
+        故按「目标文件是否存在」这一事实判定。
+        """
+        for result in ("hardlink-failed-18+copied",
+                       "hardlink-unavailable-EXDEV+copied",
+                       "moved-cross-device-copied"):
+            with self.subTest(result=result):
+                shutil.rmtree(self.path("state"), ignore_errors=True)
+                shutil.rmtree(self.path("lib"), ignore_errors=True)
+                src = self.touch("dl", "Some.Movie.2019.mkv")
+                dest = self.path("lib", "电影", "Some Movie (2019)",
+                                 "Some Movie (2019).mkv")
+                os.makedirs(os.path.dirname(dest), exist_ok=True)
+                shutil.copy2(src, dest)          # 模拟「文件已落到目标位」
+                fake_log = [{"src": src, "dest": dest, "result": result}]
+                with mock.patch.object(media.organizer, "execute",
+                                       return_value=fake_log):
+                    code, out = run("ingest", self.path("dl"),
+                                    "--library", self.path("lib"))
+                self.assertEqual(code, 0)
+                self.assertEqual(jout(out)["moved"], 1, result)
+                conn = indexer.init_db(self.path("state", "library.db"))
+                self.assertEqual([i["path"] for i in indexer.list_items(conn)],
+                                 [dest], result)
+
+    def test_refused_large_copy_is_not_indexed(self):
+        """拒复制的大文件不在目标位，即便 result 非 error 前缀也不得入索引。"""
+        self.touch("dl", "Some.Movie.2019.mkv")
+        fake_log = [{"src": self.path("dl", "Some.Movie.2019.mkv"),
+                     "dest": self.path("lib", "电影", "Some Movie (2019)",
+                                       "Some Movie (2019).mkv"),
+                     "result": "refused-large-copy-copy:3000000000>2147483648"}]
+        with mock.patch.object(media.organizer, "execute", return_value=fake_log):
+            code, out = run("ingest", self.path("dl"), "--library", self.path("lib"))
+        self.assertEqual(code, 0)
+        self.assertEqual(jout(out)["moved"], 0)
+        conn = indexer.init_db(self.path("state", "library.db"))
+        self.assertEqual(indexer.list_items(conn), [])
+
 
 class TestIndex(CliBase):
     def _seed(self):
