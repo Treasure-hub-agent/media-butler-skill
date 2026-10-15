@@ -227,7 +227,7 @@ class TestE2EOffline(_E2EBase):
         titles = {i["media_type"]: i["title"] for i in items}
         self.assertEqual(titles["tv"], "Some Show")
         # 电影那条：归档后的文件名是 "Some Movie (2019).mkv"，重建时片名尾部
-        # 会残留一个 "(" —— 这是 parser 对「已归档名再解析」的往返问题，
+        # 会残留一个 "(" —— 这是 parser 对「已归档名再解析」的已知限制，
         # 属解析器自身口径，不在本用例职责内，故只断言前缀与可重建性。
         self.assertTrue(titles["movie"].startswith("Some Movie"), titles["movie"])
         for it in items:

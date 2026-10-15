@@ -24,7 +24,7 @@ def _read(path):
 def _other_fs_dir():
     """找一个与临时目录不同挂载点的可写目录（Linux 上通常是 /dev/shm）。
 
-    硬链接要求同文件系统同挂载点，实测 /tmp -> /dev/shm 会报
+    硬链接要求同文件系统同挂载点，跨设备（如 /tmp -> /dev/shm）会报
     Invalid cross-device link，因此跨设备回退必须被显式覆盖。
     """
     for cand in ("/dev/shm",):

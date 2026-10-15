@@ -303,7 +303,7 @@ class TestIngest(CliBase):
         self.assertTrue(os.path.join("电影", "") in out)
 
     def test_auto_type_tv_when_episode_present(self):
-        """主线实测坑：剧集被识别成 movie 会落进「电影/」目录。"""
+        """已知坑：剧集被识别成 movie 会落进「电影/」目录。"""
         self.touch("dl", "Some.Show.2021.S01E02.1080p.WEB-DL.mkv")
         code, out = run("ingest", self.path("dl"),
                         "--library", self.path("lib"), "--dry-run")
@@ -487,7 +487,7 @@ class TestIndex(CliBase):
     def test_ingest_then_rebuild_keeps_title_clean(self):
         """归档规范命名「片名 (年份)」再重建，标题不得残留半截括号。
 
-        这是 ingest → index rebuild 的往返契约：规整过的目录名必须能被
+        这是 ingest → index rebuild 的往返约定：规整过的目录名必须能被
         自己的解析器原样读回，否则重建出来的目录会越滚越脏。
         """
         self.touch("dl", "Some.Movie.2019.1080p.中字.mkv")

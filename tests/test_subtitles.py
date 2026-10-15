@@ -34,7 +34,7 @@ class TestCleanSubtitle(unittest.TestCase):
 
 class TestSearchUrl(unittest.TestCase):
     def test_lowercases_query(self):
-        # 实测：路径含大写 ASCII 时服务器 302 到 https://_/... ，必须小写
+        # 路径含大写 ASCII 时服务器会 302 到无效域名，必须先转小写
         u = subtitles.build_search_url("Oppenheimer 2023")
         self.assertIn("query-oppenheimer%202023", u)
         self.assertNotIn("O", u.split("query-")[1])

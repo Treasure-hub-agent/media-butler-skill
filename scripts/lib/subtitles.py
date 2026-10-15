@@ -1,7 +1,7 @@
 """中文字幕检索、下载清洗与本地检测。
 
 免密钥接口：GET https://rest.opensubtitles.org/search/query-<片名>/sublanguageid-chi
-实测要点：
+接口要点：
   * 必须使用播放器风格的 User-Agent，否则请求被拒（403/空响应）。
   * 返回 JSON 数组，SubDownloadLink 指向 .gz，需 gzip 解压后才是 srt。
   * 返回正文常夹带推广行（如 “厌倦了搜索字幕? Ray即刻生成字幕: getray.app”），
@@ -43,7 +43,7 @@ def _opener(cfg: dict):
 def build_search_url(query: str) -> str:
     """构造免密钥检索 URL。
 
-    实测坑：路径里出现大写 ASCII 字符时，服务器会 302 到 ``https://_/...``
+    注意：路径里出现大写 ASCII 字符时，服务器会 302 到无效域名
     （空 Host，必然解析失败），因此查询词必须先统一转小写。
     """
     return "%s/query-%s/sublanguageid-chi" % (

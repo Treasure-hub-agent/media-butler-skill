@@ -1,6 +1,6 @@
 """knaben 聚合器适配器。
 
-实测要点（改动前务必确认）：
+接口要点（改动前务必确认）：
 - POST https://api.knaben.org/v1，请求体字段 search_field/query/order_by/
   order_direction/size；**绝对不能加 search_type**（加了返回 0 条）。
 - 返回 hits[] 字段为 title / magnetUrl / bytes / liveSeeders / tracker / category。
@@ -51,7 +51,7 @@ def to_result(hit):
 class KnabenSource(Source):
     id = "knaben"
     supports = ["movies", "tv", "anime"]
-    query_script = "both"     # 实测中文与拉丁查询均可命中
+    query_script = "both"     # 中文与拉丁查询均可命中
     priority = 10
 
     def search(self, query, timeout=25, proxy="", size=30):

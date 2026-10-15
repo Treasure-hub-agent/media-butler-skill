@@ -1,10 +1,10 @@
 """归档入库：目录规范、路径越界防护、垃圾过滤与硬链接回退。
 
-三条硬性约束（全部来自实测）：
+三条硬性约束：
 
 1. torrent 文件名是**攻击者可控输入**，任何拼进媒体库的路径都必须
    经 ``safe_join`` 做 realpath/commonpath 越界断言，越界抛 ``ValueError``。
-2. 硬链接要求**同文件系统且同挂载点**（/tmp -> /dev/shm 实测报
+2. 硬链接要求**同文件系统且同挂载点**（跨设备会报
    ``Invalid cross-device link``），因此先做能力探针 ``link_probe``，
    执行时按 ``rename -> link -> copy`` 三级回退。
 3. **绝不静默复制大文件**：回退到复制时，超过 ``copy_warn_bytes``

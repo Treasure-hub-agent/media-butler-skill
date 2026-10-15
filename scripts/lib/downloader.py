@@ -1,27 +1,27 @@
 """aria2 调用与合集选集定位。
 
-设计约束（均为实测结论，勿改动）：
-- 必带 ``--file-allocation=none``：aria2 默认预分配，实测 25 秒占满 1.9GB。
+设计约束（勿改动，改前先确认失效代价）：
+- 必带 ``--file-allocation=none``：aria2 默认预分配会按文件完整大小占用磁盘。
 - 必带 ``--seed-time=0``：默认会继续做种，占用带宽与磁盘。
 - 必带 ``--no-conf=true``：忽略用户 ``~/.aria2/aria2.conf``，防止它把上面两条覆盖掉。
-- DHT 入口只保留实测可连通的 dht.transmissionbt.com:6881，其余常见入口均超时。
-- tracker 只保留实测可用的三个，其余多数已失效。
+- DHT 入口只保留 dht.transmissionbt.com:6881，其余常见入口多不可达。
+- tracker 只保留以下三个，其余多数已失效。
 - 磁力链/查询词是攻击者可控输入：一律作为独立 argv 元素交给 subprocess，
   绝不用 ``shell=True``，绝不拼命令字符串。
-- aria2c 不支持 SOCKS 代理（实测报 ``unrecognized proxy format`` 后直接退出），
+- aria2c 不支持 SOCKS 代理（传 socks 型会报 ``unrecognized proxy format`` 退出），
   故 SOCKS 型代理必须跳过而不是透传。
 """
 import os, re, shutil, subprocess
 from pathlib import Path
 
-#: 实测筛选后的可用 tracker（DNS 污染与封锁会淘汰一部分，故内建可用集合）
+#: 可用的 tracker 集合（常见 tracker 失效率高，故内建保底集合）
 TRACKERS = [
     "udp://tracker.opentrackr.org:1337/announce",
     "udp://open.demonii.com:1337/announce",
     "udp://open.stealth.si:80/announce",
 ]
 
-#: 唯一实测可连通的 DHT 入口
+#: 内建 DHT 入口（其他常见入口多不可达）
 DHT_ENTRY = "dht.transmissionbt.com:6881"
 
 #: 代理 URL 的协议头里出现这些即视为 SOCKS，aria2c 不接受

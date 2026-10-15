@@ -44,7 +44,7 @@ class TestArgs(unittest.TestCase):
                                   cfg={"proxy": "http://127.0.0.1:7890"})
         self.assertTrue(any("all-proxy" in x for x in b))
 
-    # --- 代理格式与环境变量（实测约束：aria2c 不认 socks，只会报错退出）---
+    # --- 代理格式与环境变量（约束：aria2c 不认 socks，只会报错退出）---
 
     def test_ignores_user_conf_file(self):
         # ~/.aria2/aria2.conf 可能重新打开预分配/做种，必须显式忽略以免覆盖安全参数
@@ -52,7 +52,7 @@ class TestArgs(unittest.TestCase):
         self.assertIn("--no-conf=true", a)
 
     def test_socks_proxy_skipped(self):
-        # aria2c 实测报 unrecognized proxy format，socks 型必须跳过而非传给 aria2c
+        # 传 socks 型会让 aria2c 报 unrecognized proxy format，必须跳过而非传给 aria2c
         for bad in ("socks5://127.0.0.1:1080", "socks5h://127.0.0.1:1080",
                     "socks4://127.0.0.1:1080", "socks://127.0.0.1:1080"):
             a = downloader.build_args(MAGNET, "/tmp/dl", cfg={"proxy": bad})

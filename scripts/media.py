@@ -141,7 +141,7 @@ def cmd_grab(args):
     warnings = []
     blocked = False
     if proxy and not usable:
-        # aria2c 不支持 SOCKS（实测报 unrecognized proxy format 后退出）。
+        # aria2c 不支持 SOCKS（传 socks 型会报 unrecognized proxy format 退出）。
         # 这里绝不静默改走直连：直连可能泄露真实 IP，必须由用户决定。
         warnings.append(
             "代理 %s 是 SOCKS 型，aria2c 不支持（会报 unrecognized proxy format）；"
@@ -327,7 +327,7 @@ def cmd_ingest(args):
         # 只收「文件真的在目标位置上」的条目：
         # 1) error/skipped/refused 一律排除（含 refused-large-copy 这种没落盘的）；
         # 2) 其余结果值可能是 *+copied 组合（如 hardlink-failed-<errno>+copied），
-        #    白名单容易漏，改为实测目标文件存在——不存在就绝不写索引。
+        #    白名单容易漏，改为检查目标文件存在——不存在就绝不写索引。
         if result.startswith(_ARCHIVE_BAD_PREFIXES):
             continue
         if not os.path.exists(entry.get("dest") or ""):
