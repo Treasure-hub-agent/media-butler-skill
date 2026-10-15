@@ -330,6 +330,7 @@ def cmd_ingest(args):
     db = str(config.state_dir() / "library.db")
     conn = indexer.init_db(db)
     added = 0
+    embedded_tracks = []
     for entry, item in zip(log, items):
         result = str(entry.get("result") or "")
         # 只收「文件真的在目标位置上」的条目：
@@ -341,12 +342,19 @@ def cmd_ingest(args):
         if not os.path.exists(entry.get("dest") or ""):
             continue
         info = item["parsed"]
+        # 中字判定：文件名标记，或视频内嵌中文字幕轨（后者常是唯一线索）
+        has_cn = bool(info.get("marks"))
+        if not has_cn:
+            emb = subtitles.detect_embedded(entry["dest"])
+            if emb["has_chinese"]:
+                has_cn = True
+                embedded_tracks = emb["tracks"]
         indexer.add(conn, {
             "title": info["title"], "year": info.get("year"),
             "media_type": item["media_type"],
             "season": info.get("season"), "episode": info.get("episode"),
             "path": entry["dest"], "size": item.get("size") or entry.get("size") or 0,
-            "has_cn_sub": 1 if info.get("marks") else 0,
+            "has_cn_sub": 1 if has_cn else 0,
             "source": "local", "query": args.src,
         })
         added += 1
