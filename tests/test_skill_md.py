@@ -35,6 +35,20 @@ class TestSkillMd(unittest.TestCase):
         self.assertIsNone(re.search(r"20\d{2}[-/年]\d{1,2}", self.raw))
         self.assertNotIn("实测", self.raw)
 
+    def test_no_hardcoded_local_path(self):
+        # 交付物不得含开发机绝对路径，否则别人 clone 到别处就失效
+        import glob
+        import os
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        offenders = []
+        for pattern in ("*.md", "scripts/**/*.py", "tests/**/*.md"):
+            for path in glob.glob(os.path.join(root, pattern), recursive=True):
+                with open(path, encoding="utf-8") as fh:
+                    for lineno, line in enumerate(fh, 1):
+                        if "/home/ubuntu" in line or "/Users/" in line:
+                            offenders.append("%s:%d" % (os.path.relpath(path, root), lineno))
+        self.assertEqual(offenders, [], "交付物含本地绝对路径: %s" % offenders)
+
     def test_size_within_limit(self):
         self.assertLessEqual(len(self.raw), 100_000)
 

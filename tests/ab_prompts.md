@@ -7,7 +7,7 @@
 自动化那部分（离线主线不依赖网络与 aria2）在 `tests/test_e2e.py`，用一条命令跑：
 
 ```bash
-cd /home/ubuntu/media-butler-skill && python3 -m unittest discover -s tests -t .
+cd <仓库根目录> && python3 -m unittest discover -s tests -t .
 ```
 
 ## 为什么要 A/B
