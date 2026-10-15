@@ -378,6 +378,6 @@ Python 3.8+ 标准库即可，没有任何第三方 Python 包。只有真正要
 
 ## 版权
 
-[MIT License](LICENSE) © media-butler-skill contributors
+[MIT License](LICENSE) © Treasure-hub-agent
 
 本项目以笔名维护，不在国内平台推广。仓库名、目录名与 `SKILL.md` 的 `name` 字段保持一致（均为 `media-butler-skill`），以免平台识别异常。

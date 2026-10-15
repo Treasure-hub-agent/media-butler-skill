@@ -2,7 +2,7 @@
 name: media-butler-skill
 description: "Use when 用户要找片、下载影视、整理媒体库、补字幕。覆盖找片源、选种、下载电影/剧集/动漫、中文字幕获取、分类归档、库清单与缺集盘点。用户提到想看某部片、片源搜不到、下载没速度、字幕缺失、媒体库目录乱、追剧缺集、硬盘满了要清理时，都该用本 skill——哪怕没明说「下载」二字，只要意图落在「把某个影视内容弄到本地看好」或「本地影视文件乱了/缺了/占地方了」，也要主动加载它。"
 version: 0.1.0
-author: media-butler
+author: Treasure-hub-agent
 license: MIT
 platforms: [linux, macos, windows]
 metadata:

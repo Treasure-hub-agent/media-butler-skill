@@ -96,5 +96,5 @@
 ---
 
 <p align="right">
-  © media-butler-skill contributors · MIT License
+  © Treasure-hub-agent · MIT License
 </p>

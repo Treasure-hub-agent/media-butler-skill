@@ -66,6 +66,29 @@ class TestSkillMd(unittest.TestCase):
                             offenders.append("%s:%d" % (os.path.relpath(path, root), lineno))
         self.assertEqual(offenders, [], "交付物含本地绝对路径: %s" % offenders)
 
+    def test_author_is_unified(self):
+        # 作者署名统一为发布身份，禁止其他署名混入
+        import glob
+        import os
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        # 禁用词拆开拼接，避免本测试自己成为命中项
+        banned = ["media-butler-skill" + " contributors",
+                  "dev" + "@localhost", "hermes" + "@local",
+                  "media-butler" + "@local"]
+        offenders = []
+        for pattern in ("*.md", "LICENSE", "scripts/**/*.py", "tests/**/*.py",
+                        "references/**/*.md"):
+            for path in glob.glob(os.path.join(root, pattern), recursive=True):
+                with open(path, encoding="utf-8") as fh:
+                    text = fh.read()
+                for token in banned:
+                    if token in text:
+                        offenders.append("%s: %s" % (os.path.relpath(path, root), token))
+        self.assertEqual(offenders, [], "作者署名未统一: %s" % offenders)
+        self.assertIn("author: Treasure-hub-agent", self.raw)
+        self.assertIn("Copyright (c) 2026 Treasure-hub-agent",
+                      open(os.path.join(root, "LICENSE"), encoding="utf-8").read())
+
     def test_size_within_limit(self):
         self.assertLessEqual(len(self.raw), 100_000)
 

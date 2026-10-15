@@ -362,7 +362,7 @@ No, deliberately: there are no subscription features and no unattended loops.
   It does **not host, index, or scrape** any video content, and the repository contains neither video content nor links to specific works.
 - Search capability is provided by **pluggable adapters**; the repository bundles no site-specific adapter, only one **aggregator adapter**, and everything can be switched off for fully offline use.
 - Please use it only for content you own the rights to or are licensed to access, works in the public domain, and personal backups of media you have purchased. Confirming the authorization status of what you obtain is your responsibility.
-- This project is **free, ad-free, accepts no donations, and has no paid unlocks**; the authors derive no income from it.
+- This project is **free, ad-free, accepts no donations, and has no paid unlocks**; the author derives no income from it.
 - Full terms (including rights-holder and takedown response, and the kinds of contributions that are not accepted) are in **[DISCLAIMER.md](DISCLAIMER.md)**.
 
 > One line of self-reflection: **a disclaimer does not grant immunity.** What actually matters is the structural choices — no bundled sources, no self-built index, no automatic retrieval, no monetization, no promotion.
@@ -377,6 +377,6 @@ Bug fixes, tests, and documentation improvements are welcome. Please read [CONTR
 
 ## License
 
-[MIT License](LICENSE) © media-butler-skill contributors
+[MIT License](LICENSE) © Treasure-hub-agent
 
 Maintained under a pseudonym; not promoted on domestic (China) platforms. The repository name, the directory name, and the `name` field in `SKILL.md` are kept identical (`media-butler-skill`) to avoid platform recognition issues.
