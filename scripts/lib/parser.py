@@ -105,6 +105,9 @@ def _clean_title(stem: str, year, episode) -> str:
         idx = t.find(str(year))
         if idx > 0:
             t = t[:idx]
+            # 规范命名「片名 (年份)」被截断后会留下半截左括号，必须一并去掉，
+            # 否则它会被 sanitize 当成目录名的一部分（落成「片名 ( (2019)」）
+            t = re.sub(r"[\s._\-]*[\[\(【/]+$", "", t)
 
     blocks = _BRACKET_BLOCK.findall(t)
     first_block_lead = bool(re.match(r"^\s*[\[\(【]", t))
