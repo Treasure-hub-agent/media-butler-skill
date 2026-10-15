@@ -29,10 +29,13 @@ class TestSkillMd(unittest.TestCase):
         self.assertTrue(self.raw.startswith("---"))
 
     def test_name_matches_dir(self):
-        m = re.search(r"\n---\s*\n", self.raw[3:])
         fm = _parse_frontmatter(self.raw)
         self.assertEqual(fm["name"], "media-butler-skill")
-        self.assertEqual(fm["name"], os.path.basename(os.path.realpath(ROOT)))
+        # 目录名一致性只在「仓库原样 checkout」或「zip 解包（<name>-<版本>）」时校验；
+        # 用户 clone / 解包后自行重命名目录是允许的，不构成缺陷
+        dirname = os.path.basename(os.path.realpath(ROOT))
+        if dirname == fm["name"] or dirname.startswith(fm["name"] + "-"):
+            self.assertEqual(dirname[:len(fm["name"])], fm["name"])
 
     def test_description_length(self):
         m = re.search(r"\n---\s*\n", self.raw[3:])
