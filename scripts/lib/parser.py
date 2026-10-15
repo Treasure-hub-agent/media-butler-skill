@@ -8,6 +8,9 @@ CN_MARKS = [
 CN_LATIN = ["CHS", "CHT", "GB", "BIG5"]
 CN_GROUP_HINTS = ["字幕组", "字幕組"]
 
+# ASS/SSA 字幕轨是中文圈字幕组的常见内封形式（ASSx2 表示简繁各一条）
+_CN_TRACK_MARKS = re.compile(r"\bASS[x×]?\d?\b|\bSSA\b", re.I)
+
 # 技术标签：标题提取时剥离的发布信息
 _TECH_TAGS = re.compile(
     r"\b(1080p|2160p|720p|480p|4K|8K|UHD|HDR10|HDR|DoVi|DV|"
@@ -45,6 +48,8 @@ def has_chinese_subtitle(text: str) -> bool:
         return True
     upper = text.upper()
     if any(m in upper for m in CN_LATIN):
+        return True
+    if _CN_TRACK_MARKS.search(text):
         return True
     return any(g in text for g in CN_GROUP_HINTS)
 
@@ -134,6 +139,9 @@ def _clean_title(stem: str, year, episode) -> str:
     t = re.sub(r"[Ss]\d{1,2}[Ee]\d{1,4}", " ", t)      # 残留集号标记
     t = re.sub(r"[Ee]pisode[\s._-]*\d{1,4}", " ", t, flags=re.I)
 
+    # 尾部裸集号（'Frieren - 34' 中的 '- 34'）与字幕轨等技术后缀
+    t = re.sub(r"[\s._\-]+-?\s*0*\d{1,4}\s*$", " ", t)
+    t = _CN_TRACK_MARKS.sub(" ", t)
     t = t.replace(".", " ").replace("_", " ").replace("/", " / ")
     t = re.sub(r"\s+", " ", t).strip(" -~/+")
 

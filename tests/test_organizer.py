@@ -327,10 +327,11 @@ class TestPlan(unittest.TestCase):
             lib = os.path.join(d, "lib")
             os.makedirs(src_dir)
             os.makedirs(lib)
-            _write(os.path.join(src_dir, "Some.Movie.2019.1080p.mkv"), "v")
+            _write(os.path.join(src_dir, "Some.Movie.2019.1080p.mkv"), "v")    # 已完成
             _write(os.path.join(src_dir, "Unselected.Movie.2020.1080p.mkv"))   # 0 字节占位
-            _write(os.path.join(src_dir, "Some.Movie.2019.1080p.mkv.aria2"), "ctl")
+            _write(os.path.join(src_dir, "Other.Movie.2021.mkv.aria2"), "ctl")  # 控制文件本身
             plan = organizer.plan(src_dir, lib, "movie")
+            # 控制文件自身与 0 字节占位都不入库；已完成的主文件正常入库
             self.assertEqual([os.path.basename(i["src"]) for i in plan],
                              ["Some.Movie.2019.1080p.mkv"])
 

@@ -213,7 +213,15 @@ def cmd_subs(args):
     if video:
         local = subtitles.detect_local(video)
         if local:
-            _out({"status": "found-local", "path": local, "video": video})
+            _out({"status": "found-local", "kind": "sidecar",
+                  "path": local, "video": video})
+            return 0
+        embedded = subtitles.detect_embedded(video)
+        if embedded["has_chinese"]:
+            # 视频已内嵌中文字幕轨，无需再去字幕站补
+            _out({"status": "found-embedded", "kind": "embedded",
+                  "tracks": embedded["tracks"], "video": video,
+                  "message": "视频已内嵌中文字幕轨，无需额外补充"})
             return 0
         name = Path(video).stem
         dest = args.dest or str(Path(video).parent)

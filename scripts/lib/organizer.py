@@ -161,6 +161,21 @@ def link_probe(src_dir: str, dst_dir: str) -> bool:
                 pass
 
 
+def _is_incomplete(path: str) -> bool:
+    """判断文件是否仍在下载中。
+
+    aria2c 以同名 ``.aria2`` 控制文件标记「尚未下完」：单文件种子写在文件旁边
+    （``Movie.mkv.aria2``），多文件种子写在批次目录旁（``Show.aria2``）。
+    任一存在即视为未完成。
+    """
+    if os.path.exists(path + ".aria2"):
+        return True
+    parent = os.path.dirname(path)
+    if parent and os.path.exists(parent + ".aria2"):
+        return True
+    return False
+
+
 def plan(src_dir: str, library_root: str, media_type="movie", cfg=None) -> list:
     """扫描下载目录生成归档计划（不落盘）；默认 ``move``：同盘瞬时且不占额外空间。"""
     cfg = cfg or {}
@@ -175,6 +190,8 @@ def plan(src_dir: str, library_root: str, media_type="movie", cfg=None) -> list:
                 continue                      # 断链或权限问题，跳过而不是猜
             if is_junk(full, size):
                 continue
+            if _is_incomplete(full):
+                continue                      # 下载中：搬进媒体库会留下残缺文件
             ext = os.path.splitext(f)[1].lower()
             if ext not in MEDIA_EXTS and ext not in SIDECAR_EXTS:
                 continue                      # readme/url/exe 之类不进媒体库

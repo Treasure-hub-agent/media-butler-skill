@@ -99,6 +99,85 @@ def fetch(url: str, dest_dir: str, cfg=None, timeout=40) -> str:
     out.write_text(text, encoding="utf-8")
     return str(out)
 
+# 中文字幕轨的常见命名（语言代码与中文标签）
+# 中文字幕轨的常见命名：语言代码、中文标签、以及「简日双语」这类双语写法
+_CN_TRACK_HINTS = [
+    "zh-hans", "zh-hant", "zh-cn", "zh-tw", "zh", "chs", "cht", "chi",
+    "简", "繁", "简体", "繁体", "繁體", "中文", "中字", "简中", "繁中", "简繁",
+    "双语", "雙語", "sc", "tc",
+]
+_EBML_HEADER = b"\x1a\x45\xdf\xa3"
+# MKV 轨道名元素：0x536E (Name)，后跟 EBML 变长长度
+_NAME_ELEM = b"\x53\x6e"
+
+
+def _read_ebml_strings(data: bytes, limit=64) -> list:
+    """从 EBML 数据里提取轨道名字符串（纯 stdlib，不依赖 ffprobe）。
+
+    只做「名称元素 + 变长长度 + UTF-8 文本」的浅解析：够用且不会误报，
+    因为只有真正的轨道名才会命中中文字幕关键词。
+    """
+    out = []
+    i = 0
+    n = len(data)
+    while i < n - 3 and len(out) < limit:
+        if data[i:i + 2] == _NAME_ELEM:
+            j = i + 2
+            first = data[j]
+            if first == 0:
+                i += 1
+                continue
+            # 变长长度：首字节前导 1 的位数即长度字节数
+            length_bytes = 1
+            mask = 0x80
+            while length_bytes <= 8 and not (first & mask):
+                mask >>= 1
+                length_bytes += 1
+            if length_bytes > 4 or j + length_bytes > n:
+                i += 1
+                continue
+            size = first & (mask - 1) if length_bytes == 1 else first & (0xFF >> length_bytes)
+            for k in range(1, length_bytes):
+                size = (size << 8) | data[j + k]
+            start = j + length_bytes
+            if 0 < size <= 128 and start + size <= n:
+                raw = data[start:start + size]
+                try:
+                    text = raw.decode("utf-8")
+                    if text.isprintable() or any(ord(c) > 127 for c in text):
+                        out.append(text)
+                except UnicodeDecodeError:
+                    pass
+                i = start + size
+                continue
+        i += 1
+    return out
+
+
+def detect_embedded(video_path: str, head_bytes=4 * 1024 * 1024) -> dict:
+    """探测视频内嵌的中文字幕轨（读文件头部，不依赖外部工具）。
+
+    返回 ``{"has_chinese": bool, "tracks": [命中的轨道名]}``。
+    """
+    result = {"has_chinese": False, "tracks": []}
+    try:
+        with open(video_path, "rb") as f:
+            head = f.read(head_bytes)
+    except OSError:
+        return result
+    if not head.startswith(_EBML_HEADER):
+        return result
+    names = _read_ebml_strings(head)
+    hits = []
+    for name in names:
+        low = name.lower()
+        if any(h in low for h in _CN_TRACK_HINTS):
+            hits.append(name)
+    result["tracks"] = hits
+    result["has_chinese"] = bool(hits)
+    return result
+
+
 def detect_local(video_path: str) -> str:
     """检测同目录外挂中文字幕（不做内封字幕轨解析，那需要 ffprobe）。"""
     p = Path(video_path)
